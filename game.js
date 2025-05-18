@@ -7,13 +7,19 @@ const makeImg = new Image(); makeImg.src = "/syu/file/make.jpeg";
 const rasubosuImg = new Image(); rasubosuImg.src = "/syu/file/rasubosu.jpeg";
 const powerImg = new Image(); powerImg.src = "/syu/file/power.jpeg";
 
+// 画像ロードエラー可視化（必要に応じてコメント解除）
+/*
+[playerImg, tekiImg1, tekiImg2, tekiImg3, makeImg, rasubosuImg, powerImg].forEach(img => {
+  img.onerror = () => alert("画像が読み込めません: " + img.src);
+});
+*/
+
 const enemyTypes = [
   { img: tekiImg1, w: 60, h: 60, hp: 1, speed: 3, shotInterval: 90 },
   { img: tekiImg2, w: 70, h: 70, hp: 2, speed: 2, shotInterval: 70 },
   { img: tekiImg3, w: 90, h: 90, hp: 3, speed: 1.5, shotInterval: 50 },
 ];
 
-// ラスボスパラメータ
 const bossParam = {
   img: rasubosuImg,
   w: 200, h: 200,
@@ -103,7 +109,6 @@ function resizeGame() {
 window.addEventListener('resize', resizeGame);
 resizeGame();
 
-// ゲームループ
 let spawnTimer = 0, bossAppearEffect = 0;
 function loop() {
   if (!playing) return;
@@ -112,7 +117,6 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// 敵スポーン
 function spawnEnemy() {
   const t = Math.floor(Math.random()*3);
   const type = enemyTypes[t];
@@ -126,7 +130,6 @@ function spawnEnemy() {
   });
 }
 
-// パワーアップスポーン
 let powerItem = null;
 function spawnPowerUp() {
   powerItem = {
@@ -137,18 +140,15 @@ function spawnPowerUp() {
   };
 }
 
-// 弾と物体当たり判定
 function hit(a, b) {
   return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
 }
 
 function update() {
-  // 自機移動
   if (keyState['ArrowLeft'] && player.x > 0) player.x -= player.speed;
   if (keyState['ArrowRight'] && player.x < canvas.width-player.w) player.x += player.speed;
   if (keyState['ArrowUp'] && player.y > 0) player.y -= player.speed;
   if (keyState['ArrowDown'] && player.y < canvas.height-player.h) player.y += player.speed;
-  // 弾発射
   if (keyState[' '] && (!player.lastShot || Date.now()-player.lastShot>180)) {
     bullets.push({x:player.x+player.w/2-3,y:player.y,w:6,h:16,vy:-12});
     if (powerUp) {
@@ -157,21 +157,17 @@ function update() {
     }
     player.lastShot = Date.now();
   }
-  // 弾移動
   for(let b of bullets) {
     b.y += b.vy;
     b.x += b.vx||0;
   }
   bullets = bullets.filter(b=>b.y>-30&&b.x>-10&&b.x<canvas.width+10);
-  // 雑魚敵出現
   if (!bossMode) {
     spawnTimer++;
     if (spawnTimer>40) { spawnEnemy(); spawnTimer=0; }
   }
-  // 雑魚敵・攻撃・移動
   for(let e of enemies) {
     e.y += e.speed;
-    // 敵弾発射
     e.shotCooldown++;
     if (e.shotCooldown>=e.shotInterval) {
       enemyBullets.push({x:e.x+e.w/2-8, y:e.y+e.h, w:16,h:16,vy:4,img:e.img});
@@ -179,10 +175,8 @@ function update() {
     }
   }
   enemies = enemies.filter(e=>e.y<canvas.height+60&&e.hp>0);
-  // 敵弾移動
   for(let b of enemyBullets) b.y+=b.vy;
   enemyBullets = enemyBullets.filter(b=>b.y<canvas.height+20);
-  // パワーアップ出現
   if (!powerItem && Math.random()<0.002 && !bossMode) spawnPowerUp();
   if (powerItem) {
     powerItem.y += powerItem.vy;
@@ -191,12 +185,10 @@ function update() {
       powerUp = true; powerTime = 600; powerItem = null;
     }
   }
-  // パワーアップ効果時間
   if (powerUp) {
     powerTime--;
     if (powerTime<=0) powerUp=false;
   }
-  // 自弾 vs 敵
   for(let i=enemies.length-1;i>=0;i--) {
     let e = enemies[i];
     for(let j=bullets.length-1;j>=0;j--) {
@@ -209,36 +201,29 @@ function update() {
       }
     }
   }
-  // 敵弾 vs 自機
   for(let b of enemyBullets) {
     if(hit(player,b)) { playing=false; gameState='gameover'; showRetry(); }
   }
-  // 敵 vs 自機
   for(let e of enemies) {
     if(hit(player,e)) { playing=false; gameState='gameover'; showRetry(); }
   }
-  // スコアでラスボス出現
   if (!bossMode && score>=5000) {
     bossMode=true; boss={...bossParam, x:300,y:30,hp:bossParam.hp,shotTimer:0,dir:1};
     bossBullets = [];
     bossAppearEffect = 60;
   }
-  // ボス行動
   if (bossMode && boss) {
     boss.x += boss.speed*boss.dir;
     if (boss.x<0||boss.x+boss.w>canvas.width) boss.dir*=-1;
     boss.shotTimer++;
-    // ボス3WAY弾
     if (boss.shotTimer>boss.shotInterval) {
       bossBullets.push({x:boss.x+boss.w/2-8, y:boss.y+boss.h, w:16, h:16, vy:6, vx:0, img:boss.img});
       bossBullets.push({x:boss.x+boss.w/2-28, y:boss.y+boss.h, w:16, h:16, vy:5, vx:-3, img:boss.img});
       bossBullets.push({x:boss.x+boss.w/2+12, y:boss.y+boss.h, w:16, h:16, vy:5, vx:3, img:boss.img});
       boss.shotTimer=0;
     }
-    // 弾移動
     for(let b of bossBullets) { b.y+=b.vy; b.x+=b.vx; }
     bossBullets = bossBullets.filter(b=>b.y<canvas.height+20);
-    // 当たり判定
     for(let j=bullets.length-1;j>=0;j--) {
       let b = bullets[j];
       if(hit(boss,b)) {
@@ -247,7 +232,6 @@ function update() {
         if(boss.hp<=0) {boss=null; playing=false; gameState='clear'; showRetry(); score+=3000;}
       }
     }
-    // ボス弾 vs 自機
     for(let b of bossBullets) if(hit(player,b)) {playing=false;gameState='gameover';showRetry();}
   }
 }
@@ -265,11 +249,21 @@ function draw() {
   ctx.fillStyle="#fff";
   ctx.font = "24px sans-serif";
   ctx.fillText("SCORE: "+score, 10, 30);
+
+  // ★ パワーアップ表記を右端へ
   if(powerUp) {
-    ctx.drawImage(powerImg, 120, 6, 28, 28);
-    ctx.fillStyle="#ff0";ctx.font="18px sans-serif";
-    ctx.fillText("POWER UP!!", 155, 28);
+    const iconW = 28, iconH = 28;
+    const text = "POWER UP!!";
+    ctx.font = "18px sans-serif";
+    const textWidth = ctx.measureText(text).width;
+    const totalW = textWidth + 8 + iconW;
+    const x = canvas.width - 40 - totalW;
+    const y = 10;
+    ctx.fillStyle = "#ff0";
+    ctx.fillText(text, x, y + 22);
+    ctx.drawImage(powerImg, x + textWidth + 8, y, iconW, iconH);
   }
+
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
   ctx.fillStyle="#ff3";
   for(let b of bullets) ctx.fillRect(b.x,b.y,b.w,b.h);
