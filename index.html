@@ -13,6 +13,7 @@
     #gameContainer {
       margin: 30px auto;
       width: 800px;
+      max-width: 100vw;
     }
     canvas {
       background: #222;
@@ -20,6 +21,11 @@
       margin: 0 auto;
       border: 4px solid #444;
       border-radius: 16px;
+      width: 800px;
+      height: 600px;
+      max-width: 100vw;
+      max-height: 75vw;
+      touch-action: none;
     }
     #startBtn, #retryBtn {
       margin: 16px;
@@ -39,6 +45,64 @@
       vertical-align: middle;
       margin-right: 6px;
     }
+    /* スマホボタンUI */
+    #mobileBtns {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 8px auto 0 auto;
+      gap: 8px;
+      max-width: 800px;
+      width: 100vw;
+    }
+    .mb-row {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      justify-content: center;
+    }
+    .mobile-btn {
+      width: 64px;
+      height: 64px;
+      font-size: 2em;
+      border-radius: 14px;
+      border: none;
+      background: #444;
+      color: #fff;
+      box-shadow: 0 2px 6px #0008;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .mobile-btn:active {
+      background: #3af;
+      color: #fff;
+    }
+    #btnRestart {
+      font-size: 1.1em;
+      width: 140px;
+      height: 50px;
+      margin-left: 12px;
+      background: #fa3;
+      color: #111;
+      border: none;
+      display: none;
+    }
+    @media (max-width: 850px) {
+      #gameContainer {
+        width: 100vw !important;
+        min-width: 0 !important;
+      }
+      canvas {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 75vw !important;
+        max-height: 80vw !important;
+      }
+      #mobileBtns {
+        width: 100vw !important;
+        max-width: 100vw !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -47,16 +111,30 @@
     <canvas id="game" width="800" height="600"></canvas>
     <button id="startBtn">START</button>
     <button id="retryBtn">RETRY</button>
-    <p>操作: ← → ↑ ↓で移動 ／ スペースで弾</p>
+    <div id="mobileBtns">
+      <div class="mb-row">
+        <button class="mobile-btn" id="btnUp">↑</button>
+      </div>
+      <div class="mb-row">
+        <button class="mobile-btn" id="btnLeft">←</button>
+        <button class="mobile-btn" id="btnShot">●</button>
+        <button class="mobile-btn" id="btnRight">→</button>
+      </div>
+      <div class="mb-row">
+        <button class="mobile-btn" id="btnDown">↓</button>
+        <button class="mobile-btn" id="btnRestart">リスタート</button>
+      </div>
+    </div>
+    <p>操作: ← → ↑ ↓で移動 ／ スペースで弾<br>スマホは下のボタンでOK！</p>
   </div>
   <script>
     // 画像ロード
-    const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpeg";   // 自機
-    const tekiImg1 = new Image(); tekiImg1.src = "/syu/file/teki.jpeg";      // 敵1
-    const tekiImg2 = new Image(); tekiImg2.src = "/syu/file/teki2.jpeg";     // 敵2
+    const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpeg"; // 自機
+    const tekiImg1 = new Image(); tekiImg1.src = "syu/file/teki.jpeg";      // 敵1
+    const tekiImg2 = new Image(); tekiImg2.src = "syu/file/teki2.jpeg";     // 敵2
     const tekiImg3 = new Image(); tekiImg3.src = "/syu/file/teki3.jpeg";     // 敵3
-    const makeImg = new Image(); makeImg.src = "/syu/file/make.jpeg";         // ゲームオーバー
-    const rasubosuImg = new Image(); rasubosuImg.src = "/syu/file/rasubosu.jpeg"; // ラスボス
+    const makeImg = new Image(); makeImg.src = "syu/file/make.jpeg";         // ゲームオーバー
+    const rasubosuImg = new Image(); rasubosuImg.src = "syu/file/rasubosu.jpeg"; // ラスボス
     const powerImg = new Image(); powerImg.src = "/syu/file/power.jpeg";     // パワーアップ
 
     const enemyTypes = [
@@ -78,6 +156,8 @@
     const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('startBtn');
     const retryBtn = document.getElementById('retryBtn');
+    // モバイル用リスタート
+    const btnRestart = document.getElementById('btnRestart');
     
     // ゲーム変数
     let player, bullets, enemies, enemyBullets, score, keyState, playing, powerUp, powerTime, boss, bossMode, bossBullets, gameState, bestScore;
@@ -108,14 +188,40 @@
       resetGame();
       startBtn.style.display = 'none';
       retryBtn.style.display = 'none';
+      btnRestart.style.display = 'none';
       loop();
     };
     retryBtn.onclick = function() {
       resetGame();
       retryBtn.style.display = 'none';
       startBtn.style.display = 'none';
+      btnRestart.style.display = 'none';
       loop();
     };
+    btnRestart.onclick = function() {
+      resetGame();
+      btnRestart.style.display = 'none';
+      retryBtn.style.display = 'none';
+      startBtn.style.display = 'none';
+      loop();
+    };
+
+    // モバイル操作ボタン
+    const mbKeys = {
+      btnLeft: 'ArrowLeft',
+      btnRight: 'ArrowRight',
+      btnUp: 'ArrowUp',
+      btnDown: 'ArrowDown',
+      btnShot: ' ',
+    };
+    Object.keys(mbKeys).forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.ontouchstart = btn.onmousedown = e => { e.preventDefault(); keyState[mbKeys[id]] = true; };
+      btn.ontouchend = btn.onmouseup = e => { e.preventDefault(); keyState[mbKeys[id]] = false; };
+      btn.ontouchcancel = e => { e.preventDefault(); keyState[mbKeys[id]] = false; };
+      btn.onmouseleave = e => { keyState[mbKeys[id]] = false; };
+    });
 
     // ゲームループ
     let spawnTimer = 0, bossAppearEffect = 0;
@@ -271,6 +377,7 @@
 
     function showRetry() {
       retryBtn.style.display = '';
+      btnRestart.style.display = '';
       startBtn.style.display = 'none';
     }
 
@@ -302,34 +409,6 @@
       if (powerItem) ctx.drawImage(powerImg, powerItem.x, powerItem.y, powerItem.w, powerItem.h);
       // ボス
       if(bossMode && boss) {
-        if(bossAppearEffect>0) {ctx.save();ctx.globalAlpha=0.6;ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();bossAppearEffect--;}      
-        ctx.drawImage(boss.img, boss.x, boss.y, boss.w, boss.h);
-        // ボスHPバー
-        ctx.fillStyle="#000";ctx.fillRect(boss.x, boss.y-16, boss.w, 12);
-        ctx.fillStyle="#f55";ctx.fillRect(boss.x, boss.y-16, boss.w * boss.hp/bossParam.hp, 12);
-      }
-      // ボス弾
-      if(bossBullets) for(let b of bossBullets) ctx.drawImage(b.img, b.x, b.y, 16, 16);
-      // ゲームオーバー
-      if(gameState==='gameover') {
-        ctx.globalAlpha=0.9;ctx.fillStyle="#222";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalAlpha=1;
-        ctx.drawImage(makeImg, canvas.width/2-150, 80, 300, 220);
-        ctx.fillStyle="#fff";
-        ctx.font = "28px sans-serif";
-        ctx.fillText("いやー惜しかった！絶対次は行ける！", 90, 350);
-        ctx.fillText("いやまじで！ここまで努力している人は見たことない！", 20, 390);
-        ctx.fillText("いや煽りじゃないって（笑）", 200, 430);
-      }
-      // クリア
-      if(gameState==='clear') {
-        ctx.globalAlpha=0.85;ctx.fillStyle="#111";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalAlpha=1;
-        ctx.drawImage(rasubosuImg, canvas.width/2-120, 100, 240, 200);
-        ctx.fillStyle="#ff0"; ctx.font = "48px sans-serif";
-        ctx.fillText("クリア！おめでとう！", 180, 350);
-        ctx.font = "28px sans-serif";
-        ctx.fillText("スコア: "+score, 320, 400);
-      }
-    }
-  </script>
-</body>
-</html>
+        if(bossAppearEffect>0) {ctx.save();ctx.globalAlpha=0.6;ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();bossAppearEffect--スマホ操作ボタン（↑↓←→・ショット・リスタート）と**スマホ自動サイズ調整**を、あなたの現状コードに完全統合した「上書き差分」を作成しました。
+
+---
