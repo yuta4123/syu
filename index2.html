@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>オリジナル顔シューティングゲーム</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>オリジナル顔シューティングゲーム</h1>
+  <div id="gameContainer">
+    <canvas id="game" width="800" height="600"></canvas>
+    <button id="startBtn">START</button>
+    <button id="retryBtn">RETRY</button>
+    <div id="mobileBtns">
+      <div class="mb-row">
+        <button class="mobile-btn" id="btnUp">↑</button>
+      </div>
+      <div class="mb-row">
+        <button class="mobile-btn" id="btnLeft">←</button>
+        <button class="mobile-btn" id="btnShot">●</button>
+        <button class="mobile-btn" id="btnRight">→</button>
+      </div>
+      <div class="mb-row">
+        <button class="mobile-btn" id="btnDown">↓</button>
+        <button class="mobile-btn" id="btnRestart">リスタート</button>
+      </div>
+    </div>
+    <p>操作: ← → ↑ ↓で移動 ／ スペースで弾<br>スマホは下のボタンでOK！</p>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
