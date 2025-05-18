@@ -129,13 +129,13 @@
   </div>
   <script>
     // 画像ロード
-    const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpg"; // 自機
-    const tekiImg1 = new Image(); tekiImg1.src = "/syu/file/teki.jpeg";      // 敵1
-    const tekiImg2 = new Image(); tekiImg2.src = "/syu/file/teki2.jpeg";     // 敵2
-    const tekiImg3 = new Image(); tekiImg3.src = "/syu/file/teki3.jpeg";     // 敵3
-    const makeImg = new Image(); makeImg.src = "/syu/file/make.jpeg";         // ゲームオーバー
-    const rasubosuImg = new Image(); rasubosuImg.src = "/syu/file/rasubosu.jpeg"; // ラスボス
-    const powerImg = new Image(); powerImg.src = "/syu/file/power.jpeg";     // パワーアップ
+    const playerImg = new Image(); playerImg.src = "/mnt/data/mikata.jpg"; // 自機
+    const tekiImg1 = new Image(); tekiImg1.src = "/mnt/data/teki.jpeg";      // 敵1
+    const tekiImg2 = new Image(); tekiImg2.src = "/mnt/data/teki2.jpeg";     // 敵2
+    const tekiImg3 = new Image(); tekiImg3.src = "/mnt/data/teki3.jpeg";     // 敵3
+    const makeImg = new Image(); makeImg.src = "/mnt/data/make.jpeg";         // ゲームオーバー
+    const rasubosuImg = new Image(); rasubosuImg.src = "/mnt/data/rasubosu.jpeg"; // ラスボス
+    const powerImg = new Image(); powerImg.src = "/mnt/data/power.jpeg";     // パワーアップ
 
     const enemyTypes = [
       { img: tekiImg1, w: 60, h: 60, hp: 1, speed: 3, shotInterval: 90 },
@@ -383,7 +383,61 @@
         }
         // ボス弾 vs 自機
         for(let b of bossBullets) if(hit(player,b)) {playing=false;gameState='gameover';showRetry();}
-        // ボス vs 自機
-        if(hit(player,boss)) {playing=false;gameState='gameover';showRetry();}
-      }
-    }
+        $1
+// --- draw関数を追加 ---
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // 背景
+  ctx.fillStyle = "#222";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // スコア
+  ctx.fillStyle="#fff";
+  ctx.font = "24px sans-serif";
+  ctx.fillText("SCORE: "+score, 10, 30);
+  // パワーアップ表示
+  if(powerUp) {
+    ctx.drawImage(powerImg, 120, 6, 28, 28);
+    ctx.fillStyle="#ff0";ctx.font="18px sans-serif";
+    ctx.fillText("POWER UP!!", 155, 28);
+  }
+  // 自機
+  ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+  // 自弾
+  ctx.fillStyle="#ff3";
+  for(let b of bullets) ctx.fillRect(b.x,b.y,b.w,b.h);
+  // 雑魚敵
+  for(let e of enemies) ctx.drawImage(e.img, e.x, e.y, e.w, e.h);
+  // 敵弾
+  for(let b of enemyBullets) ctx.drawImage(b.img, b.x, b.y, 16, 16);
+  // パワーアップアイテム
+  if (typeof powerItem !== 'undefined' && powerItem) ctx.drawImage(powerImg, powerItem.x, powerItem.y, powerItem.w, powerItem.h);
+  // ボス
+  if(bossMode && boss) {
+    if(bossAppearEffect>0) {ctx.save();ctx.globalAlpha=0.6;ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();bossAppearEffect--;}
+    ctx.drawImage(boss.img, boss.x, boss.y, boss.w, boss.h);
+    // ボスHPバー
+    ctx.fillStyle="#000";ctx.fillRect(boss.x, boss.y-16, boss.w, 12);
+    ctx.fillStyle="#f55";ctx.fillRect(boss.x, boss.y-16, boss.w * boss.hp/bossParam.hp, 12);
+    for(let b of bossBullets) ctx.drawImage(b.img, b.x, b.y, 16, 16);
+  }
+  // ゲームオーバー
+  if(gameState==='gameover') {
+    ctx.globalAlpha=0.9;ctx.fillStyle="#222";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalAlpha=1;
+    ctx.drawImage(makeImg, canvas.width/2-150, 80, 300, 220);
+    ctx.fillStyle="#fff";
+    ctx.font = "28px sans-serif";
+    ctx.fillText("いやー惜しかった！絶対次は行ける！", 90, 350);
+    ctx.fillText("いやまじで！ここまで努力している人は見たことない！", 20, 390);
+    ctx.fillText("いや煽りじゃないって（笑）", 200, 430);
+  }
+  // クリア
+  if(gameState==='clear') {
+    ctx.globalAlpha=0.85;ctx.fillStyle="#111";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalAlpha=1;
+    ctx.drawImage(rasubosuImg, canvas.width/2-120, 100, 240, 200);
+    ctx.fillStyle="#ff0"; ctx.font = "48px sans-serif";
+    ctx.fillText("クリア！おめでとう！", 180, 350);
+    ctx.font = "28px sans-serif";
+    ctx.fillText("スコア: "+score, 320, 400);
+  }
+}
+// --- draw関数ここまで ---
