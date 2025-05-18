@@ -128,7 +128,7 @@
     <p>操作: ← → ↑ ↓で移動 ／ スペースで弾<br>スマホは下のボタンでOK！</p>
   </div>
   <script>
-    // 画像ロード
+        // 画像ロード
     const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpeg"; // 自機
     const tekiImg1 = new Image(); tekiImg1.src = "syu/file/teki.jpeg";      // 敵1
     const tekiImg2 = new Image(); tekiImg2.src = "syu/file/teki2.jpeg";     // 敵2
@@ -222,6 +222,19 @@
       btn.ontouchcancel = e => { e.preventDefault(); keyState[mbKeys[id]] = false; };
       btn.onmouseleave = e => { keyState[mbKeys[id]] = false; };
     });
+
+    // スマホ画面調整
+    function resizeGame() {
+      if(window.innerWidth < 850) {
+        canvas.width = window.innerWidth;
+        canvas.height = Math.round(window.innerWidth * 0.75);
+      } else {
+        canvas.width = 800;
+        canvas.height = 600;
+      }
+    }
+    window.addEventListener('resize', resizeGame);
+    resizeGame();
 
     // ゲームループ
     let spawnTimer = 0, bossAppearEffect = 0;
@@ -374,41 +387,3 @@
         if(hit(player,boss)) {playing=false;gameState='gameover';showRetry();}
       }
     }
-
-    function showRetry() {
-      retryBtn.style.display = '';
-      btnRestart.style.display = '';
-      startBtn.style.display = 'none';
-    }
-
-    function draw() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      // 背景
-      ctx.fillStyle = "#222";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      // スコア
-      ctx.fillStyle="#fff";
-      ctx.font = "24px sans-serif";
-      ctx.fillText("SCORE: "+score, 10, 30);
-      // パワーアップ表示
-      if(powerUp) {
-        ctx.drawImage(powerImg, 120, 6, 28, 28);
-        ctx.fillStyle="#ff0";ctx.font="18px sans-serif";
-        ctx.fillText("POWER UP!!", 155, 28);
-      }
-      // 自機
-      ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-      // 自弾
-      ctx.fillStyle="#ff3";
-      for(let b of bullets) ctx.fillRect(b.x,b.y,b.w,b.h);
-      // 雑魚敵
-      for(let e of enemies) ctx.drawImage(e.img, e.x, e.y, e.w, e.h);
-      // 敵弾
-      for(let b of enemyBullets) ctx.drawImage(b.img, b.x, b.y, 16, 16);
-      // パワーアップアイテム
-      if (powerItem) ctx.drawImage(powerImg, powerItem.x, powerItem.y, powerItem.w, powerItem.h);
-      // ボス
-      if(bossMode && boss) {
-        if(bossAppearEffect>0) {ctx.save();ctx.globalAlpha=0.6;ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();bossAppearEffect--スマホ操作ボタン（↑↓←→・ショット・リスタート）と**スマホ自動サイズ調整**を、あなたの現状コードに完全統合した「上書き差分」を作成しました。
-
----
