@@ -1,5 +1,5 @@
 // 画像ロード
-const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpg";
+const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpeg";
 const tekiImg1 = new Image(); tekiImg1.src = "/syu/file/teki.jpeg";
 const tekiImg2 = new Image(); tekiImg2.src = "/syu/file/teki2.jpeg";
 const tekiImg3 = new Image(); tekiImg3.src = "/syu/file/teki3.jpeg";
