@@ -52,12 +52,19 @@ function resetGame() {
   gameState = 'playing';
   spawnTimer = 0;
   bossAppearEffect = 0;
+  powerItem = null;
 }
 
-document.addEventListener('keydown', e => { keyState[e.key] = true; });
+document.addEventListener('keydown', e => {
+  if([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+  }
+  keyState[e.key] = true;
+});
 document.addEventListener('keyup', e => { keyState[e.key] = false; });
 
 startBtn.onclick = function() {
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   startBtn.style.display = 'none';
   retryBtn.style.display = 'none';
@@ -65,6 +72,7 @@ startBtn.onclick = function() {
   loop();
 };
 retryBtn.onclick = function() {
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   retryBtn.style.display = 'none';
   startBtn.style.display = 'none';
@@ -72,6 +80,7 @@ retryBtn.onclick = function() {
   loop();
 };
 btnRestart.onclick = function() {
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   btnRestart.style.display = 'none';
   retryBtn.style.display = 'none';
@@ -110,11 +119,15 @@ window.addEventListener('resize', resizeGame);
 resizeGame();
 
 let spawnTimer = 0, bossAppearEffect = 0;
+let frameId = null;
 function loop() {
-  if (!playing) return;
+  if (!playing) {
+    frameId = null;
+    return;
+  }
   update();
   draw();
-  requestAnimationFrame(loop);
+  frameId = requestAnimationFrame(loop);
 }
 
 function spawnEnemy() {
@@ -229,7 +242,14 @@ function update() {
       if(hit(boss,b)) {
         boss.hp--;
         bullets.splice(j,1);
-        if(boss.hp<=0) {boss=null; playing=false; gameState='clear'; showRetry(); score+=3000;}
+        if(boss.hp<=0) {
+          boss = null;
+          playing = false;
+          gameState = 'clear';
+          showRetry();
+          score += 3000;
+          break; // avoid checking boss after it disappears
+        }
       }
     }
     for(let b of bossBullets) if(hit(player,b)) {playing=false;gameState='gameover';showRetry();}
