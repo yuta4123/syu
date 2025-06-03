@@ -64,6 +64,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { keyState[e.key] = false; });
 
 startBtn.onclick = function() {
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   startBtn.style.display = 'none';
   retryBtn.style.display = 'none';
@@ -71,6 +72,7 @@ startBtn.onclick = function() {
   loop();
 };
 retryBtn.onclick = function() {
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   retryBtn.style.display = 'none';
   startBtn.style.display = 'none';
@@ -78,6 +80,7 @@ retryBtn.onclick = function() {
   loop();
 };
 btnRestart.onclick = function() {
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   btnRestart.style.display = 'none';
   retryBtn.style.display = 'none';
@@ -116,11 +119,15 @@ window.addEventListener('resize', resizeGame);
 resizeGame();
 
 let spawnTimer = 0, bossAppearEffect = 0;
+let frameId = null;
 function loop() {
-  if (!playing) return;
+  if (!playing) {
+    frameId = null;
+    return;
+  }
   update();
   draw();
-  requestAnimationFrame(loop);
+  frameId = requestAnimationFrame(loop);
 }
 
 function spawnEnemy() {
