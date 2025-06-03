@@ -55,7 +55,12 @@ function resetGame() {
   powerItem = null;
 }
 
-document.addEventListener('keydown', e => { keyState[e.key] = true; });
+document.addEventListener('keydown', e => {
+  if([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+  }
+  keyState[e.key] = true;
+});
 document.addEventListener('keyup', e => { keyState[e.key] = false; });
 
 startBtn.onclick = function() {
