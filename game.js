@@ -52,6 +52,7 @@ function resetGame() {
   gameState = 'playing';
   spawnTimer = 0;
   bossAppearEffect = 0;
+  powerItem = null;
 }
 
 document.addEventListener('keydown', e => { keyState[e.key] = true; });
