@@ -52,6 +52,7 @@ function resetGame() {
   gameState = 'playing';
   spawnTimer = 0;
   bossAppearEffect = 0;
+  powerItem = null;
 }
 
 document.addEventListener('keydown', e => { keyState[e.key] = true; });
@@ -229,7 +230,14 @@ function update() {
       if(hit(boss,b)) {
         boss.hp--;
         bullets.splice(j,1);
-        if(boss.hp<=0) {boss=null; playing=false; gameState='clear'; showRetry(); score+=3000;}
+        if(boss.hp<=0) {
+          boss = null;
+          playing = false;
+          gameState = 'clear';
+          showRetry();
+          score += 3000;
+          break; // avoid checking boss after it disappears
+        }
       }
     }
     for(let b of bossBullets) if(hit(player,b)) {playing=false;gameState='gameover';showRetry();}
