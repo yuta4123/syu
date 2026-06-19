@@ -33,10 +33,49 @@ const ctx = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn');
 const retryBtn = document.getElementById('retryBtn');
 const btnRestart = document.getElementById('btnRestart');
+const mobileModeBtn = document.getElementById('mobileModeBtn');
+const pcModeBtn = document.getElementById('pcModeBtn');
 const MAX_ENEMY_BULLETS = 180;
 const MAX_BOSS_BULLETS = 90;
 
-let player, bullets, enemies, enemyBullets, score, keyState, playing, powerUp, powerTime, boss, bossMode, bossBullets, gameState, bestScore;
+let player, bullets, enemies, enemyBullets, score, playing, powerUp, powerTime, boss, bossMode, bossBullets, gameState, bestScore;
+let keyState = {};
+let currentMode = getInitialMode();
+
+function getInitialMode() {
+  try {
+    const savedMode = localStorage.getItem('shootingGameMode');
+    if (savedMode === 'mobile' || savedMode === 'pc') return savedMode;
+  } catch (_) {}
+
+  return window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 700
+    ? 'mobile'
+    : 'pc';
+}
+
+function setMode(mode, save = true) {
+  currentMode = mode;
+  document.documentElement.classList.toggle('mobile-mode', mode === 'mobile');
+  document.documentElement.classList.toggle('pc-mode', mode === 'pc');
+  document.body.classList.toggle('mobile-mode', mode === 'mobile');
+  document.body.classList.toggle('pc-mode', mode === 'pc');
+  mobileModeBtn.classList.toggle('active', mode === 'mobile');
+  pcModeBtn.classList.toggle('active', mode === 'pc');
+  mobileModeBtn.setAttribute('aria-pressed', mode === 'mobile');
+  pcModeBtn.setAttribute('aria-pressed', mode === 'pc');
+  keyState = {};
+
+  if (save) {
+    try {
+      localStorage.setItem('shootingGameMode', mode);
+    } catch (_) {}
+  }
+
+  resizeGame();
+}
+
+mobileModeBtn.addEventListener('click', () => setMode('mobile'));
+pcModeBtn.addEventListener('click', () => setMode('pc'));
 
 function resetGame() {
   const playerSize = canvas.width < 500 ? 56 : 64;
@@ -123,7 +162,7 @@ function resizeGame() {
   const screenWidth = Math.min(window.innerWidth, 800);
   const isPortrait = window.innerHeight > window.innerWidth;
 
-  if(window.innerWidth < 850) {
+  if(currentMode === 'mobile') {
     canvas.width = screenWidth;
     canvas.height = isPortrait
       ? Math.round(screenWidth * 1.3)
@@ -149,7 +188,7 @@ function resizeGame() {
 }
 window.addEventListener('resize', resizeGame);
 window.addEventListener('orientationchange', () => setTimeout(resizeGame, 100));
-resizeGame();
+setMode(currentMode, false);
 
 let spawnTimer = 0, bossAppearEffect = 0;
 let frameId = null;
