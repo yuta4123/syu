@@ -1,11 +1,11 @@
 // 画像ロード
-const playerImg = new Image(); playerImg.src = "/syu/file/mikata.jpeg";
-const tekiImg1 = new Image(); tekiImg1.src = "/syu/file/teki.jpeg";
-const tekiImg2 = new Image(); tekiImg2.src = "/syu/file/teki2.jpeg";
-const tekiImg3 = new Image(); tekiImg3.src = "/syu/file/teki3.jpeg";
-const makeImg = new Image(); makeImg.src = "/syu/file/make.jpeg";
-const rasubosuImg = new Image(); rasubosuImg.src = "/syu/file/rasubosu.jpeg";
-const powerImg = new Image(); powerImg.src = "/syu/file/power.jpeg";
+const playerImg = new Image(); playerImg.src = "./file/mikata.jpeg";
+const tekiImg1 = new Image(); tekiImg1.src = "./file/teki.jpeg";
+const tekiImg2 = new Image(); tekiImg2.src = "./file/teki2.jpeg";
+const tekiImg3 = new Image(); tekiImg3.src = "./file/teki3.jpeg";
+const makeImg = new Image(); makeImg.src = "./file/make.jpeg";
+const rasubosuImg = new Image(); rasubosuImg.src = "./file/rasubosu.jpeg";
+const powerImg = new Image(); powerImg.src = "./file/power.jpeg";
 
 // 画像ロードエラー可視化（必要に応じてコメント解除）
 /*
