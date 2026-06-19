@@ -35,8 +35,10 @@ const retryBtn = document.getElementById('retryBtn');
 const btnRestart = document.getElementById('btnRestart');
 const MAX_ENEMY_BULLETS = 180;
 const MAX_BOSS_BULLETS = 90;
+const MAX_PLAYER_HITS = 3;
 
 let player, bullets, enemies, enemyBullets, score, keyState, playing, powerUp, powerTime, boss, bossMode, bossBullets, gameState, bestScore;
+let playerHits;
 
 function resetGame() {
   const playerSize = canvas.width < 500 ? 56 : 64;
@@ -56,6 +58,7 @@ function resetGame() {
   playing = true;
   powerUp = false;
   powerTime = 0;
+  playerHits = MAX_PLAYER_HITS;
   boss = null;
   bossMode = false;
   gameState = 'playing';
@@ -222,6 +225,14 @@ function gameOver() {
   showRetry();
 }
 
+function damagePlayer() {
+  if (!playing) return;
+  playerHits--;
+  if (playerHits <= 0) {
+    gameOver();
+  }
+}
+
 function update() {
   if (keyState['ArrowLeft'] && player.x > 0) player.x -= player.speed;
   if (keyState['ArrowRight'] && player.x < canvas.width-player.w) player.x += player.speed;
@@ -282,11 +293,18 @@ function update() {
     }
   }
   cancelEnemyBullets();
-  for(let b of enemyBullets) {
-    if(hit(player,b)) { gameOver(); return; }
+  for (let i = enemyBullets.length - 1; i >= 0; i--) {
+    if (hit(player, enemyBullets[i])) {
+      enemyBullets.splice(i, 1);
+      damagePlayer();
+      if (!playing) return;
+    }
   }
   for(let e of enemies) {
-    if(hit(player,e)) { gameOver(); return; }
+    if(hit(player,e)) {
+      damagePlayer();
+      if (!playing) return;
+    }
   }
   if (!bossMode && score>=5000) {
     bossMode=true;
@@ -331,8 +349,16 @@ function update() {
         }
       }
     }
-    for(let b of bossBullets) {
-      if(hit(player,b)) { gameOver(); return; }
+    for (let i = bossBullets.length - 1; i >= 0; i--) {
+      if (hit(player, bossBullets[i])) {
+        bossBullets.splice(i, 1);
+        damagePlayer();
+        if (!playing) return;
+      }
+    }
+    if (hit(player, boss)) {
+      damagePlayer();
+      if (!playing) return;
     }
   }
 }
@@ -351,6 +377,15 @@ function draw() {
   ctx.font = "24px sans-serif";
   ctx.fillText("SCORE: "+score, 10, 30);
 
+  ctx.font = "28px 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif";
+  const heartSpacing = 28;
+  ctx.textAlign = 'right';
+  for (let i = 0; i < playerHits; i++) {
+    ctx.fillStyle = "#ff4d6d";
+    ctx.fillText("❤️", canvas.width - 14 - i * heartSpacing, 30);
+  }
+  ctx.textAlign = 'left';
+
   // ★ パワーアップ表記を右端へ
   if(powerUp) {
     const iconW = 28, iconH = 28;
@@ -358,7 +393,8 @@ function draw() {
     ctx.font = "18px sans-serif";
     const textWidth = ctx.measureText(text).width;
     const totalW = textWidth + 8 + iconW;
-    const x = canvas.width - 40 - totalW;
+    const heartsLeftEdge = canvas.width - 14 - (MAX_PLAYER_HITS - 1) * heartSpacing - 28;
+    const x = Math.max(12, heartsLeftEdge - 12 - totalW);
     const y = 10;
     ctx.fillStyle = "#ff0";
     ctx.fillText(text, x, y + 22);
