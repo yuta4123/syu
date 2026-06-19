@@ -33,6 +33,8 @@ const ctx = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn');
 const retryBtn = document.getElementById('retryBtn');
 const btnRestart = document.getElementById('btnRestart');
+const MAX_ENEMY_BULLETS = 180;
+const MAX_BOSS_BULLETS = 90;
 
 let player, bullets, enemies, enemyBullets, score, keyState, playing, powerUp, powerTime, boss, bossMode, bossBullets, gameState, bestScore;
 
@@ -62,31 +64,23 @@ document.addEventListener('keydown', e => {
   keyState[e.key] = true;
 });
 document.addEventListener('keyup', e => { keyState[e.key] = false; });
+window.addEventListener('blur', () => { keyState = {}; });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) keyState = {};
+});
 
-startBtn.onclick = function() {
+function startGame() {
   if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   resetGame();
   startBtn.style.display = 'none';
   retryBtn.style.display = 'none';
   btnRestart.style.display = 'none';
   loop();
-};
-retryBtn.onclick = function() {
-  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
-  resetGame();
-  retryBtn.style.display = 'none';
-  startBtn.style.display = 'none';
-  btnRestart.style.display = 'none';
-  loop();
-};
-btnRestart.onclick = function() {
-  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
-  resetGame();
-  btnRestart.style.display = 'none';
-  retryBtn.style.display = 'none';
-  startBtn.style.display = 'none';
-  loop();
-};
+}
+
+startBtn.onclick = startGame;
+retryBtn.onclick = startGame;
+btnRestart.onclick = startGame;
 
 // モバイル操作ボタン
 const mbKeys = {
@@ -99,10 +93,20 @@ const mbKeys = {
 Object.keys(mbKeys).forEach(id => {
   const btn = document.getElementById(id);
   if (!btn) return;
-  btn.ontouchstart = btn.onmousedown = e => { e.preventDefault(); keyState[mbKeys[id]] = true; };
-  btn.ontouchend = btn.onmouseup = e => { e.preventDefault(); keyState[mbKeys[id]] = false; };
-  btn.ontouchcancel = e => { e.preventDefault(); keyState[mbKeys[id]] = false; };
-  btn.onmouseleave = e => { keyState[mbKeys[id]] = false; };
+  const release = e => {
+    e.preventDefault();
+    keyState[mbKeys[id]] = false;
+  };
+  btn.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    btn.setPointerCapture?.(e.pointerId);
+    keyState[mbKeys[id]] = true;
+  });
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('lostpointercapture', release);
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+  btn.addEventListener('selectstart', e => e.preventDefault());
 });
 
 // スマホ画面調整
@@ -127,7 +131,7 @@ function loop() {
   }
   update();
   draw();
-  frameId = requestAnimationFrame(loop);
+  frameId = playing ? requestAnimationFrame(loop) : null;
 }
 
 function spawnEnemy() {
@@ -157,6 +161,38 @@ function hit(a, b) {
   return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
 }
 
+function cancelEnemyBullets() {
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    let cancelled = false;
+
+    for (let j = enemyBullets.length - 1; j >= 0; j--) {
+      if (hit(bullets[i], enemyBullets[j])) {
+        bullets.splice(i, 1);
+        enemyBullets.splice(j, 1);
+        cancelled = true;
+        break;
+      }
+    }
+    if (cancelled) continue;
+
+    for (let j = bossBullets.length - 1; j >= 0; j--) {
+      if (hit(bullets[i], bossBullets[j])) {
+        bullets.splice(i, 1);
+        bossBullets.splice(j, 1);
+        break;
+      }
+    }
+  }
+}
+
+function gameOver() {
+  if (!playing) return;
+  playing = false;
+  gameState = 'gameover';
+  keyState = {};
+  showRetry();
+}
+
 function update() {
   if (keyState['ArrowLeft'] && player.x > 0) player.x -= player.speed;
   if (keyState['ArrowRight'] && player.x < canvas.width-player.w) player.x += player.speed;
@@ -183,7 +219,9 @@ function update() {
     e.y += e.speed;
     e.shotCooldown++;
     if (e.shotCooldown>=e.shotInterval) {
-      enemyBullets.push({x:e.x+e.w/2-8, y:e.y+e.h, w:16,h:16,vy:4,img:e.img});
+      if (enemyBullets.length < MAX_ENEMY_BULLETS) {
+        enemyBullets.push({x:e.x+e.w/2-8, y:e.y+e.h, w:16,h:16,vy:4,img:e.img});
+      }
       e.shotCooldown=0;
     }
   }
@@ -214,11 +252,12 @@ function update() {
       }
     }
   }
+  cancelEnemyBullets();
   for(let b of enemyBullets) {
-    if(hit(player,b)) { playing=false; gameState='gameover'; showRetry(); }
+    if(hit(player,b)) { gameOver(); return; }
   }
   for(let e of enemies) {
-    if(hit(player,e)) { playing=false; gameState='gameover'; showRetry(); }
+    if(hit(player,e)) { gameOver(); return; }
   }
   if (!bossMode && score>=5000) {
     bossMode=true; boss={...bossParam, x:300,y:30,hp:bossParam.hp,shotTimer:0,dir:1};
@@ -230,13 +269,16 @@ function update() {
     if (boss.x<0||boss.x+boss.w>canvas.width) boss.dir*=-1;
     boss.shotTimer++;
     if (boss.shotTimer>boss.shotInterval) {
-      bossBullets.push({x:boss.x+boss.w/2-8, y:boss.y+boss.h, w:16, h:16, vy:6, vx:0, img:boss.img});
-      bossBullets.push({x:boss.x+boss.w/2-28, y:boss.y+boss.h, w:16, h:16, vy:5, vx:-3, img:boss.img});
-      bossBullets.push({x:boss.x+boss.w/2+12, y:boss.y+boss.h, w:16, h:16, vy:5, vx:3, img:boss.img});
+      if (bossBullets.length <= MAX_BOSS_BULLETS - 3) {
+        bossBullets.push({x:boss.x+boss.w/2-8, y:boss.y+boss.h, w:16, h:16, vy:6, vx:0, img:boss.img});
+        bossBullets.push({x:boss.x+boss.w/2-28, y:boss.y+boss.h, w:16, h:16, vy:5, vx:-3, img:boss.img});
+        bossBullets.push({x:boss.x+boss.w/2+12, y:boss.y+boss.h, w:16, h:16, vy:5, vx:3, img:boss.img});
+      }
       boss.shotTimer=0;
     }
     for(let b of bossBullets) { b.y+=b.vy; b.x+=b.vx; }
     bossBullets = bossBullets.filter(b=>b.y<canvas.height+20);
+    cancelEnemyBullets();
     for(let j=bullets.length-1;j>=0;j--) {
       let b = bullets[j];
       if(hit(boss,b)) {
@@ -252,7 +294,9 @@ function update() {
         }
       }
     }
-    for(let b of bossBullets) if(hit(player,b)) {playing=false;gameState='gameover';showRetry();}
+    for(let b of bossBullets) {
+      if(hit(player,b)) { gameOver(); return; }
+    }
   }
 }
 
