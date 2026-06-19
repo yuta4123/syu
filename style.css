@@ -5,6 +5,26 @@ body {
   font-family: Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
+#modeSwitch {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px auto;
+}
+#modeSwitch button {
+  padding: 8px 16px;
+  border: 1px solid #666;
+  border-radius: 999px;
+  background: #292929;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+#modeSwitch button.active {
+  border-color: #3af;
+  background: #3af;
+  color: #08131c;
+}
 #gameContainer {
   margin: 30px auto;
   width: 800px;
@@ -223,5 +243,146 @@ canvas {
   }
   .mb-row {
     gap: 2px;
+  }
+}
+
+/* 選択式スマホモード */
+body.mobile-mode {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+}
+body.mobile-mode #modeSwitch {
+  height: 34px;
+  margin: 2px 0;
+  gap: 4px;
+}
+body.mobile-mode #modeSwitch button {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+body.mobile-mode h1 {
+  display: none;
+}
+body.mobile-mode #gameContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw !important;
+  height: calc(100dvh - 38px);
+  min-width: 0 !important;
+  margin: 0 auto;
+  overflow: hidden;
+}
+body.mobile-mode canvas {
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: 100vw !important;
+  height: auto !important;
+  max-height: calc(100dvh - 218px) !important;
+  border-radius: 8px;
+}
+body.mobile-mode #mobileBtns {
+  display: flex;
+  flex: 0 0 176px;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 2px 0 0;
+  gap: 2px;
+}
+body.mobile-mode .mobile-btn {
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  font-size: 1.7em;
+  border-radius: 12px;
+}
+body.mobile-mode #startBtn,
+body.mobile-mode #retryBtn {
+  position: absolute;
+  z-index: 2;
+  top: 28%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  border-radius: 8px;
+}
+body.mobile-mode #btnRestart {
+  width: 112px;
+  height: 40px;
+  margin-left: 4px;
+  font-size: 0.85em;
+  border-radius: 8px;
+}
+body.mobile-mode .mb-row {
+  gap: 3px;
+}
+body.mobile-mode #gameContainer > p {
+  display: none;
+}
+
+/* 選択式PCモード */
+html.pc-mode,
+body.pc-mode {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  overflow: auto;
+}
+body.pc-mode h1 {
+  display: block;
+  height: auto;
+  margin: 12px 0;
+  line-height: normal;
+}
+body.pc-mode #mobileBtns {
+  display: none !important;
+}
+body.pc-mode #gameContainer {
+  display: block;
+  width: min(800px, 100vw);
+  height: auto;
+  margin: 12px auto;
+  overflow: visible;
+}
+body.pc-mode canvas {
+  width: min(800px, calc(100vw - 8px)) !important;
+  height: auto !important;
+  max-height: calc(100dvh - 180px) !important;
+  aspect-ratio: 4 / 3;
+}
+body.pc-mode #startBtn,
+body.pc-mode #retryBtn {
+  position: static;
+  transform: none;
+  margin: 16px;
+  padding: 16px 48px;
+  font-size: 1.8em;
+  border-radius: 14px;
+}
+body.pc-mode #gameContainer > p {
+  display: block;
+}
+
+@media (max-height: 650px) {
+  body.mobile-mode canvas {
+    max-height: calc(100dvh - 184px) !important;
+  }
+  body.mobile-mode #mobileBtns {
+    flex-basis: 144px;
+  }
+  body.mobile-mode .mobile-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.35em;
+  }
+  body.mobile-mode #btnRestart {
+    width: 96px;
+    height: 34px;
   }
 }
