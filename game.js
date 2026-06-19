@@ -39,7 +39,14 @@ const MAX_BOSS_BULLETS = 90;
 let player, bullets, enemies, enemyBullets, score, keyState, playing, powerUp, powerTime, boss, bossMode, bossBullets, gameState, bestScore;
 
 function resetGame() {
-  player = { x: 370, y: 500, w: 64, h: 64, speed: 5 };
+  const playerSize = canvas.width < 500 ? 56 : 64;
+  player = {
+    x: (canvas.width - playerSize) / 2,
+    y: canvas.height - playerSize - 20,
+    w: playerSize,
+    h: playerSize,
+    speed: 5
+  };
   bullets = [];
   enemies = [];
   enemyBullets = [];
@@ -111,15 +118,37 @@ Object.keys(mbKeys).forEach(id => {
 
 // スマホ画面調整
 function resizeGame() {
+  const oldWidth = canvas.width;
+  const oldHeight = canvas.height;
+  const screenWidth = Math.min(window.innerWidth, 800);
+  const isPortrait = window.innerHeight > window.innerWidth;
+
   if(window.innerWidth < 850) {
-    canvas.width = window.innerWidth;
-    canvas.height = Math.round(window.innerWidth * 0.75);
+    canvas.width = screenWidth;
+    canvas.height = isPortrait
+      ? Math.round(screenWidth * 1.3)
+      : Math.round(screenWidth * 0.75);
   } else {
     canvas.width = 800;
     canvas.height = 600;
   }
+
+  if (player) {
+    player.x = Math.max(0, Math.min(
+      canvas.width - player.w,
+      player.x * canvas.width / oldWidth
+    ));
+    player.y = Math.max(0, Math.min(
+      canvas.height - player.h,
+      player.y * canvas.height / oldHeight
+    ));
+  }
+  if (boss) {
+    boss.x = Math.max(0, Math.min(canvas.width - boss.w, boss.x));
+  }
 }
 window.addEventListener('resize', resizeGame);
+window.addEventListener('orientationchange', () => setTimeout(resizeGame, 100));
 resizeGame();
 
 let spawnTimer = 0, bossAppearEffect = 0;
@@ -260,7 +289,15 @@ function update() {
     if(hit(player,e)) { gameOver(); return; }
   }
   if (!bossMode && score>=5000) {
-    bossMode=true; boss={...bossParam, x:300,y:30,hp:bossParam.hp,shotTimer:0,dir:1};
+    bossMode=true;
+    boss={
+      ...bossParam,
+      x: Math.max(0, (canvas.width - bossParam.w) / 2),
+      y: 30,
+      hp: bossParam.hp,
+      shotTimer: 0,
+      dir: 1
+    };
     bossBullets = [];
     bossAppearEffect = 60;
   }
